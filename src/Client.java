@@ -2,7 +2,8 @@ import com.sun.xml.internal.fastinfoset.util.StringArray;
 
 import java.io.*;
 import java.net.Socket;
-
+import java.rmi.*;
+import java.rmi.registry.*;
 public class Client {
 
     public static void main(String[] args) throws IOException {
@@ -39,8 +40,14 @@ public class Client {
         String reponse = inFromServer.readLine();
         System.out.println(reponse);
         File toCompile= new File("./src/Calc.java");
-        //BStream.toStream(outToServer, (int)toCompile.length());
+        BStream.toStream(outToServer, "Calc");
         BStream.toStream(outToServer,toCompile);
+        BStream.toStream(outToServer,"add");
+        BStream.toStream(outToServer,2);
+        BStream.toStream(outToServer,arg1);
+        BStream.toStream(outToServer,arg2);
+        int res=BStream.toInt(clientSocket.getInputStream());
+        System.out.println("Resultat: "+res);
     }
 
     public static void ByteColl(String arg1, String arg2, Socket clientSocket, DataOutputStream outToServer, BufferedReader InFromServer) throws IOException {
@@ -50,6 +57,12 @@ public class Client {
 
     public static void ObjectColl(String arg1, String arg2, Socket clientSocket, DataOutputStream outToServer, BufferedReader InFromServer) throws IOException {
         ByteStream BStream=new ByteStream();
-        BStream.toStream(outToServer,2);
+        BStream.toStream(outToServer,3);
+        System.setSecurityManager(new RMISecurityManager());
+        try {
+            CalcRemote C= (CalcRemote)Naming.lookup("rmi://localhost:1099/CalcServeur");
+            System.out.println("Resultat: " + C.add(arg1,arg2) );
+        } catch (Exception e) { System.out.println(e); }
     }
 }
+
